@@ -1,0 +1,18 @@
+{
+  "resources/css/reset.css": {
+    "file": "assets/reset-FTDst1_u.css",
+    "src": "resources/css/reset.css",
+    "isEntry": true
+  },
+  "resources/css/style.css": {
+    "file": "assets/style-hmVXH3fZ.css",
+    "src": "resources/css/style.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-M1ngz1QP.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  }
+}
