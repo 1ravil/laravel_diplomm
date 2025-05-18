@@ -32,6 +32,7 @@ class Products extends Model
         'product_color',
         'product_memory',
         'product_img',
+        'main_image',
         'product_images',
         'categories_id',
         'product_description',

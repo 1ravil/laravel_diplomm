@@ -15,7 +15,7 @@
         <aside class="adminPanelSidebar">
             <div class="adminPanelSidebarHeader">
                 <i class='bx bx-cart-alt'></i>
-                <span>AppleZone</span>
+                <span>AppleMarket</span>
             </div>
 
             <nav class="adminPanelSidebarNav">
@@ -79,9 +79,6 @@
             <div class="adminPanelContent">
                 <div class="adminPanelContentCard">
                     <!-- Filters -->
-
-
-
                     <form id="filterForm" method="GET" action="{{ route('adminPanelCategoryFilter') }}">
                         <div id="filterPanel" class="adminPanelFilters" style="display: none;">
                             <div class="adminPanelFilterGrid">

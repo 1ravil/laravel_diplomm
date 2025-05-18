@@ -1047,8 +1047,14 @@ input{
 .alert-danger, .alert-success{
     font-size: 25px;
     text-align: center;
-
 }
+
+.alert-dangerProductStore, .alert-success{
+    font-size: 25px;
+    text-align: center;
+    color: #FFFFFF;
+}
+
 .haveAnaccount-Container{
     display: flex;
     justify-content: center;
@@ -1497,7 +1503,7 @@ input{
 
 .card__price--discount {
     font-weight: 700;
-    font-size: 20px;
+    font-size: 23px;
     color: #fff;
     display: flex;
     flex-wrap: wrap-reverse;
@@ -1534,6 +1540,20 @@ input{
     line-height: 150%;
     color: #fff;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .card__title_Catalog:hover {
     color: #118DA8;
@@ -3481,6 +3501,18 @@ input[type="file"] {
     color: #fff;
 }
 
+.container_image-choice .block1, .block2{
+    color: #FFFFFF;
+    font-size: 20px;
+}
+.container_image-choice .block1{
+    margin-top: 40px;
+}
+
+.container_image-choice .block2{
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
 
 @media (max-width: 1150px){
     .subscribe-left{

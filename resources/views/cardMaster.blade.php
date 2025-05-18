@@ -13,13 +13,15 @@
             // Декодируем JSON в массив
             $images = json_decode($product->product_images, true);
             // Берем первое изображение из массива
-            $firstImage = $images[0] ?? 'imagenotfound.png'; // Если массив пуст, используем изображение по умолчанию
+            $firstImage = $images[0] ?? 'imagenotfound.png';
         @endphp
         <img
-            src="{{ Vite::asset('resources/img/catalog/' . $firstImage) }}"
-            alt="{{ $product->product_name }}" class="imgCartPage"
+            src="{{ asset('img/catalog/' . $firstImage) }}"
+            alt="{{ $product->product_name }}"
+            class="imgCartPage"
         />
     </a>
+
     <div class="order-text">
         <a href="{{ route('cartProduct', ['id' => $product->id]) }}" class="order-name" id="order-name">
             {{ $product->product_name }}, {{ $product->product_color }}

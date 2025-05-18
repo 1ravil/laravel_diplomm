@@ -21,7 +21,7 @@
             <div class="right-href">
                 <div class="rh-title">Узнать больше</div>
                 <div class="href-img">
-                    <a href="#" class="href-img1"><img src="{{ Vite::asset('resources/img/index/avito.png') }}" alt=""></a>
+                    <a href="https://www.avito.ru/profile/rating?page_from=profile_menu" class="href-img1"><img src="{{ Vite::asset('resources/img/index/avito.png') }}" alt=""></a>
                     <a href="#" class="href-img1"><img src="{{ Vite::asset('resources/img/index/instagram.png') }}" alt=""></a>
                     <!-- <a href="#" class="href-img1"><img src="image-href/3.png" alt=""></a>
                     <a href="#" class="href-img1"><img src="image-href/4.png" alt=""></a>

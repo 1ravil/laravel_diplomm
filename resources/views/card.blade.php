@@ -9,9 +9,8 @@
                 // Берем первое изображение из массива
                 $firstImage = $images[0] ?? 'imagenotfound.png'; // Если массив пуст, используем изображение по умолчанию
             @endphp
-            <img
-                src="{{ Vite::asset('resources/img/catalog/' . $firstImage) }}"
-                alt="{{ $product->product_name }}"
+            <img src="{{ asset('img/catalog/' . $firstImage) }}" alt="{{ $product->product_name }}" />
+            alt="{{ $product->product_name }}"
             />
         </a>
         <!-- Скидка на товар -->

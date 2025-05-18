@@ -13,26 +13,34 @@
         <div class="cartProduct-imageContainer">
             @if($product->product_images && count(json_decode($product->product_images)) > 0)
                 <div class="cartProduct_gallery-thumbnails">
+                    @if($product->main_image)
+                        <img src="{{ asset('img/catalog/' . $product->main_image) }}"
+                             alt="Основное фото товара"
+                             class="thumbnail active"
+                             data-image="{{ asset('img/catalog/' . $product->main_image) }}">
+                    @endif
+
                     @foreach(json_decode($product->product_images) as $index => $image)
-                        <img src="{{ Vite::asset('resources/img/catalog/' . $image) }}"
+                        <img src="{{ asset('img/catalog/' . $image) }}"
                              alt="Фото товара {{ $index + 1 }}"
-                             class="thumbnail {{ $index === 0 ? 'active' : '' }}"
-                             data-image="{{ Vite::asset('resources/img/catalog/' . $image) }}">
+                             class="thumbnail"
+                             data-image="{{ asset('img/catalog/' . $image) }}">
                     @endforeach
                 </div>
                 <div class="card__image">
-                    <img src="{{ Vite::asset('resources/img/catalog/' . json_decode($product->product_images)[0]) }}"
+                    <img src="{{ asset('img/catalog/' . $product->main_image) }}"
                          alt="Основное фото товара"
                          id="main-product-image"/>
                 </div>
             @else
                 <div class="cartProductWarning">
-                    <img src="{{ Vite::asset('resources/img/catalog/imagenotfound.png')}}"
+                    <img src="{{ asset('img/catalog/imagenotfound.png') }}"
                          alt="Фото не найдено"
                          id="main-product-image" class="notfoundimg"/>
                 </div>
             @endif
         </div>
+
         <div class="cartProductInfo-container">
             <div class="badges">
                 <span class="badge">Гарантия</span>
@@ -66,17 +74,9 @@
                         <div class="cartProductColor">
                             {{$product -> product_color}}
                         </div>
-
-
-
                     </div>
                 </div>
-
-
-
-
             </div>
-
                     @if($product->product_memory != 0)
                     <div class="storage-selection">
 

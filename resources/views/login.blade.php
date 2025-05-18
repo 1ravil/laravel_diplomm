@@ -11,9 +11,7 @@
 <div class="wrapper-container">
     <div class="wrapper-container">
         <div class="wrapper">
-
-
-                <form action="{{ route('loginAuth') }}" method="POST">
+                 <form action="{{ route('loginAuth') }}" method="POST">
                 @csrf <!-- Добавьте защиту CSRF -->
                 <h1>Авторизация</h1>
                     @if (session('success'))

@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateCategoryRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\Categories;
 use App\Models\create_orders_products_customers_table;
 use App\Models\customers;
@@ -15,6 +20,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StoreProductRequest;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
+
 class MainController extends Controller
 {
 
@@ -203,30 +212,20 @@ class MainController extends Controller
     public function adminPanelProductCard($id)
     {
         if (!is_numeric($id)) {
-            // Если $id не число, выполняем редирект
-            return redirect()->route('categories'); // Укажите здесь нужный маршрут
+            return redirect()->route('categories'); // Укажите маршрут, на который будет редирект
         }
-        // Получите продукт по ID
-        $product = Products::findOrFail($id); // Найти продукт по ID или вернуть 404
-        return view('adminPanelProductCard', compact('product')); // Передаем продукт в виде массива
-    }
-
-    public function ProductsUpdate(Request $request, $id)
-    {
-        Log::info('Метод ProductsUpdate вызван', ['id' => $id]);
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'product_price' => 'required|numeric',
-            'product_color' => 'required|string|max:50',
-            'product_memory' => 'nullable|string|max:255',
-            'product_description' => 'nullable|string',
-            'product_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'categories_id' => 'required|integer',
-            'availability' => 'nullable|boolean',
-        ]);
 
         $product = Products::findOrFail($id);
+        $categories = Categories::all(); // Все категории
+        return view('adminPanelProductCard', compact('product', 'categories'));
+    }
 
+
+    public function ProductsUpdate(UpdateProductRequest $request, $id)
+    {
+        $product = Products::findOrFail($id);
+
+        // Обновляем данные товара
         $product->product_name = $request->product_name;
         $product->product_price = $request->product_price;
         $product->product_color = $request->product_color;
@@ -234,30 +233,34 @@ class MainController extends Controller
         $product->product_description = $request->product_description ?? 'Описание отсутствует';
         $product->categories_id = $request->categories_id;
         $product->availability = $request->has('availability') ? 1 : 0;
-        if ($request->hasFile('product_img')) {
-            $image = $request->file('product_img');
-            $imageName = $image->getClientOriginalName(); // Берем оригинальное имя файла
-            $image->move(resource_path('img/catalog'), $imageName); // Сохраняем файл в нужную папку
-            $product->product_img = $imageName; // В БД сохраняем только имя файла
+
+        // Обработка основного изображения
+        if ($request->hasFile('main_image')) {
+            $mainImage = $request->file('main_image');
+            $mainImageName = time() . '_' . $mainImage->getClientOriginalName();
+            $mainImage->move(public_path('img/catalog'), $mainImageName);
+            $product->main_image = $mainImageName;
         }
 
-
+        // Обработка дополнительных изображений
+        if ($request->hasFile('product_images')) {
+            $imagePaths = [];
+            foreach ($request->file('product_images') as $image) {
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('img/catalog'), $imageName);
+                $imagePaths[] = $imageName;
+            }
+            $product->product_images = json_encode($imagePaths);
+        }
 
         $product->updated_at = now();
         $product->save();
 
-        Log::info('Продукт обновлён', ['id' => $id, 'name' => $product->product_name]);
-
         return redirect()->route('adminPanelProductCard', $id)->with('success', 'Товар обновлён!');
     }
-    public function CategoriesUpdate(Request $request, $id)
+    public function CategoriesUpdate(UpdateCategoryRequest $request, $id)
     {
         Log::info('Метод CategoriesUpdate вызван', ['id' => $id]);
-
-        $request->validate([
-            'categories_name' => 'required|string|max:255',
-            'product_img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
 
         $category = Categories::findOrFail($id);
         $category->name = $request->categories_name;
@@ -307,35 +310,19 @@ class MainController extends Controller
         return view('adminPanelinsertUsers', compact('users'));
     }
 
-    public function usersUpdate(Request $request, $id)
+    public function usersUpdate(UpdateUserRequest $request, $id)
     {
-        Log::info('Метод usersUpdate вызван', ['id' => $id]);
-
-        // Валидация данных
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required|string|max:50',
-            'email' => 'required|email|max:255|unique:users,email,' . $id,
-            'password' => 'nullable|string|min:6',
-        ]);
-
-        // Найти пользователя
         $user = User::findOrFail($id);
 
-        // Обновляем данные
         $user->name = $request->name;
         $user->role = $request->role;
         $user->email = $request->email;
 
-        // Если передан новый пароль — хешируем и сохраняем
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 
-        // Сохраняем изменения
         $user->save();
-
-        Log::info('Пользователь обновлён', ['id' => $id, 'name' => $user->name]);
 
         return redirect()->route('adminPanelUsers')->with('success', 'Пользователь обновлён!');
     }
@@ -351,48 +338,48 @@ class MainController extends Controller
 
     public function createProduct()
     {
-        return view('adminPanelProductCardCreate'); // Файл Blade-шаблона для создания товара
+        $categories = Categories::all();
+        return view('adminPanelProductCardCreate', compact('categories')); // Файл Blade-шаблона для создания товара
     }
 
-    public function storeProduct(Request $request)
+    public function storeProduct(StoreProductRequest $request)
     {
-        // Валидация данных
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'product_price' => 'required|numeric',
-            'product_color' => 'required|string|max:50',
-            'product_memory' => 'nullable|string|max:255',
-            'product_description' => 'required|string',
-            'product_images' => 'required|array|min:4', // Минимум 4 фотографии
-            'product_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Каждая фотография должна быть изображением
-            'categories_id' => 'required|integer',
-            'availability' => 'nullable|boolean',
-        ]);
-
         // Обрабатываем загрузку изображений
         $imagePaths = [];
         if ($request->hasFile('product_images')) {
             foreach ($request->file('product_images') as $image) {
-                $imageName = time() . '_' . $image->getClientOriginalName(); // Уникальное имя файла
-                $image->move(resource_path('img/catalog'), $imageName); // Сохраняем файл в папку
-                $imagePaths[] = $imageName; // Сохраняем имя файла в массив
+                $imageName = time() . '_' . $image->getClientOriginalName(); // Генерация уникального имени для изображения
+                $image->move(public_path('img/catalog'), $imageName); // Перемещение файла в папку public/img/catalog
+                $imagePaths[] = $imageName; // Добавляем имя файла в массив путей
             }
         }
 
-        // Создаем товар
+        // Обрабатываем загрузку основного изображения
+        $mainImageName = null;
+        if ($request->hasFile('main_image')) {
+            $mainImage = $request->file('main_image');
+            $mainImageName = time() . '_main_' . $mainImage->getClientOriginalName(); // Генерация уникального имени для основного изображения
+            $mainImage->move(public_path('img/catalog'), $mainImageName); // Перемещение файла в папку public/img/catalog
+        }
+
+        // Создание нового товара в базе данных
         Products::create([
             'product_name' => $request->product_name,
             'product_price' => $request->product_price,
             'product_color' => $request->product_color,
-            'product_memory' => $request->product_memory,
-            'product_images' => json_encode($imagePaths), // Сохраняем массив фотографий в формате JSON
+            'product_memory' => $request->product_memory ?? 0, // Если не указан, ставим 0
+            'main_image' => $mainImageName, // Сохраняем имя основного изображения
+            'product_images' => json_encode($imagePaths), // Сохраняем массив имен изображений в JSON
             'product_description' => $request->product_description,
             'categories_id' => $request->categories_id,
-            'availability' => $request->availability ?? true,
+            'availability' => $request->has('availability') ? true : false, // Преобразуем в булево значение
         ]);
 
+        // Перенаправляем пользователя с сообщением об успешном добавлении товара
         return redirect()->route('adminPanel')->with('success', 'Товар успешно добавлен!');
     }
+
+
 
     public function deleteCategories(Request $request)
     {
@@ -430,38 +417,24 @@ class MainController extends Controller
     }
 
 
-    public function storeCategory(Request $request)
+    public function storeCategory(StoreCategoryRequest $request)
     {
-        // Validate incoming request data
-        $request->validate([
-            'categories_name' => 'required|string|max:255',
-            'categories_img' => 'required|image|mimes:jpeg,png,jpg,gif',
-        ]);
+        $imagePath = null;
 
-        // Handle the uploaded category image
         if ($request->hasFile('categories_img')) {
             $image = $request->file('categories_img');
-            $imageName = $image->getClientOriginalName(); // Add timestamp to avoid name conflicts
-            $image->move(resource_path('img/categories'), $imageName); // Store image in the 'public/img/categories' folder
-            $imagePath = 'img/categories/' . $imageName; // Store the relative path
-            $imagePath = $imageName; // В БД сохраняем только имя файла
-        } else {
-            $imagePath = null; // If no image is provided, set it to null
+            $imageName = $image->getClientOriginalName();
+            $image->move(resource_path('img/categories'), $imageName);
+            $imagePath = $imageName;
         }
-        // Create a new category record in the 'categories' table
+
         Categories::create([
             'name' => $request->categories_name,
-            'img' => $imagePath, // Save the image path
+            'img' => $imagePath,
         ]);
 
-        // Redirect with a success message
         return redirect()->route('adminPanelCategory')->with('success', 'Категория успешно добавлена!');
     }
-
-
-
-
-
 
     public function deleteOrders(Request $request)
     {
@@ -519,26 +492,19 @@ class MainController extends Controller
         return view('adminPanelUsersCreate'); // Файл Blade-шаблона для создания товара
     }
 
-    public function storeUser(Request $request)
+    public function storeUser(StoreUserRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'role' => 'required|numeric',
-            'email' => 'required|email|max:255|unique:users,email', // Исправлено
-            'password' => 'nullable|string|min:6',
-        ]);
-
-
         User::create([
             'name' => $request->name,
             'role' => $request->role,
             'email' => $request->email,
             'surname' => ' ',
-            'password' => bcrypt($request->password), // Хеширование пароля
+            'password' => bcrypt($request->password),
         ]);
 
-        return redirect()->route('adminPanelUserCreate')->with('success', 'Товар успешно добавлен!');
+        return redirect()->route('adminPanelUserCreate')->with('success', 'Пользователь успешно добавлен!');
     }
+
 
     public function deleteCustomers(Request $request)
     {
@@ -755,4 +721,77 @@ class MainController extends Controller
         return view('adminPanelCustomers', compact('customers'));
     }
 
+
+    public function userOrders(Request $request)
+    {
+        $user = Auth::user();
+        $customer = DB::table('customers')->where('email', $user->email)->first();
+        if (!$customer) {
+            return view('UsersMyOrders', ['orders' => collect()]);
+        }
+        $orders = DB::table('orders_products_customers')
+            ->leftJoin('orders', 'orders_products_customers.order_id', '=', 'orders.id')
+            ->leftJoin('customers', 'orders_products_customers.customer_id', '=', 'customers.id')
+            ->leftJoin('orders_products', 'orders_products_customers.order_id', '=', 'orders_products.orders_id')
+            ->leftJoin('products', 'orders_products.products_id', '=', 'products.id')
+            ->select(
+                'orders_products_customers.order_id',
+                DB::raw("COALESCE(customers.customer_name, 'Неизвестный клиент') AS customer_name"),
+                'customers.phone',
+                'orders_products_customers.created_at',
+                'orders_products_customers.terms',
+                DB::raw("STRING_AGG(products.product_name, ', ') AS product_names"),
+                DB::raw("SUM(orders_products.count) AS total_count"),
+                DB::raw("SUM(COALESCE(products.product_price, 0)) AS product_price"),
+                DB::raw("SUM(COALESCE(products.product_price, 0) * orders_products.count) AS total_price"),
+                'orders.created_at'
+            )
+            ->whereNotNull('orders_products_customers.order_id')
+            ->where('orders_products_customers.customer_id', $customer->id)
+            ->groupBy(
+                'orders_products_customers.order_id',
+                'customers.customer_name',
+                'customers.phone',
+                'orders_products_customers.created_at',
+                'orders_products_customers.terms',
+                'orders.created_at'
+            )
+            ->orderBy('orders.created_at', 'desc')
+            ->get();
+        return view('UsersMyOrders', compact('orders'));
+    }
+    public function UsersMyOrdersDelete(Request $request)
+    {
+        $user = auth()->user();
+        $orderId = $request->input('order_id');
+
+        if (!$orderId) {
+            return redirect()->back()->with('error', 'Не передан ID заказа.');
+        }
+
+        // Найдём клиента по email пользователя
+        $customer = customers::where('email', $user->email)->first();
+
+        if (!$customer) {
+            return redirect()->back()->with('error', 'Клиент не найден.');
+        }
+
+        // Проверим, принадлежит ли заказ этому клиенту
+        $orderCustomer = DB::table('orders_products_customers')
+            ->where('order_id', $orderId)
+            ->where('customer_id', $customer->id)
+            ->first();
+
+        if (!$orderCustomer) {
+            return redirect()->back()->with('error', 'Этот заказ вам не принадлежит.');
+        }
+
+        // Удалим заказ клиента
+        DB::table('orders_products_customers')
+            ->where('order_id', $orderId)
+            ->where('customer_id', $customer->id)
+            ->delete();
+
+        return redirect()->back()->with('success', 'Заказ успешно отменён.');
+    }
 }

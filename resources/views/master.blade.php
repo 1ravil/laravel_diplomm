@@ -23,7 +23,7 @@
 <header>
     <div class="header-line">
         <div class="img-logo">
-            <img class="apple-img1" src="{{ Vite::asset('resources/img/AppleZoneLogo1.png') }}" alt="">
+            <img class="apple-img1" src="{{ Vite::asset('resources/img/AppleZoneLogo22.png') }}" alt="">
         </div>
         <div class="nav-container">
             <a class="nav-item" href="{{ route('index') }}">Главное</a>
@@ -36,15 +36,19 @@
             @auth
                 @if(auth()->user()->role === 2)
                     <a class="nav-item" href="{{ route('adminPanel') }}">Панель администратора</a>
+                @elseif(auth()->user()->role === 1)
+                    <a class="nav-item" href="{{ route('user.orders') }}">Мои заказы</a>
                 @endif
-                    <a class="nav-item" href="{{ route('logout') }}" id="logout-link">Выход</a>
 
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                <a class="nav-item" href="{{ route('logout') }}" id="logout-link">Выход</a>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                     @csrf
                 </form>
             @else
                 <a class="nav-item" href="{{ route('login') }}">Вход</a>
             @endauth
+
         </div>
 
     </div>

@@ -15,7 +15,7 @@
             <aside class="adminPanelSidebar">
                 <div class="adminPanelSidebarHeader">
                     <i class='bx bx-cart-alt'></i>
-                    <span>AppleZone</span>
+                    <span>AppleMarket</span>
                 </div>
 
                 <nav class="adminPanelSidebarNav">

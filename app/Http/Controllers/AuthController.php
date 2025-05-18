@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,33 +28,22 @@ class AuthController extends Controller
         return view('verify');
     }
 
-    public function store(Request $request)
+    public function store(RegisterUserRequest $request)
     {
-        $existingUser = User::where('email', $request['email'])->first();
-
-        if ($existingUser) {
-            // Если пользователь существует, возвращаем ошибку через сессию
-            return redirect()->back()->with('error', 'Этот адрес электронной почты уже занят.');
-        }
-
-        /*  $request->validate([
-              'email' => 'required|string|email|max:255|unique:users',
-              'password' => 'required|string|confirmed|min:8',
-          ]);*/
-
+        // сюда дойдёт только если все правила из RegisterUserRequest пройдены
         $user = User::create([
-            'name' => $request['name'],
-            'surname' => $request['surname'],
-            'email' => $request['email'],
-            'password' => bcrypt($request['password']),
-            'role' => 1,
+            'name'     => $request->name,
+            'surname'  => $request->surname,
+            'email'    => $request->email,
+            'password' => bcrypt($request->password),
+            'role'     => 1,
         ]);
 
         Auth::login($user);
+        event(new Registered($user));          // письмо-подтверждение
 
-        event(new Registered($user)); // Отправка email с подтверждением
-
-        return redirect('login')->with('success', 'Регистрация прошла успешно!');
+        return redirect()->route('login')
+            ->with('success', 'Регистрация прошла успешно!');
     }
 
     public function loginAuth(Request $request)
@@ -63,15 +53,21 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['email' => $request->username, 'password' => $request->password])) {
-            return redirect()->intended('/')->with('success', 'Вы успешно вошли в систему!');
+        $user = User::where('email', $request->username)->first();
+
+        if (!$user) {
+            // Если пользователь не найден
+            return back()->withErrors(['username' => 'Мы не нашли пользователя с таким адресом электронной почты.'])->withInput();
         }
 
-        // Если аутентификация не удалась, перенаправляем обратно с ошибкой
+        if (!Auth::attempt(['email' => $request->username, 'password' => $request->password])) {
+            // Если пароль неверный
+            return back()->withErrors(['password' => 'Неверный пароль.'])->withInput();
+        }
 
-        return back()->withErrors(['email' => __('passwords.user')]);
-
+        return redirect()->intended('/')->with('success', 'Вы успешно вошли в систему!');
     }
+
 
 
     public function logout()
