@@ -37,7 +37,6 @@ Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('loginAut
 Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register/add', [AuthController::class, 'store'])->name('userCreate');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/verify', [AuthController::class, 'verify'])->name('verify');
 
 
 

@@ -36,7 +36,7 @@
             @auth
                 @if(auth()->user()->role === 2)
                     <a class="nav-item" href="{{ route('adminPanel') }}">Панель администратора</a>
-                @elseif(auth()->user()->role === 1)
+                @elseif(auth()->user()->role === 1 && auth()->user()->email_verified_at)
                     <a class="nav-item" href="{{ route('user.orders') }}">Мои заказы</a>
                 @endif
 
@@ -48,6 +48,7 @@
             @else
                 <a class="nav-item" href="{{ route('login') }}">Вход</a>
             @endauth
+
 
         </div>
 

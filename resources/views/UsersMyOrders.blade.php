@@ -26,7 +26,7 @@
                                 <th style="padding-left: 35px;">Дата</th>
                                 <th>Клиент</th>
                                 <th>Телефон</th>
-                                <th style="padding-left: 80px;">Товары</th>
+                                <th style="padding-left: 20px;">Товары</th>
                                 <th>Количество</th>
                                 <th>Общая сумма</th>
                                 <th>Действия</th>

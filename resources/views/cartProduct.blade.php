@@ -50,27 +50,6 @@
                 <div class="color-selection">
                     <h3>Цвет</h3>
                     <div class="color-options">
-                        @php
-                            // Получаем текущий цвет продукта
-                            $currentColor = strtolower($product->product_color ?? '');
-
-                            // Массив возможных цветов
-                            $colors = [
-                                'black', 'white', 'gray', 'silver', 'red', 'green', 'blue', 'yellow', 'purple', 'cyan', 'magenta',
-                                'orange', 'brown', 'pink', 'teal', 'lime', 'indigo', 'violet', 'beige', 'ivory', 'navy', 'maroon',
-                                'chocolate', 'coral', 'turquoise', 'fuchsia', 'gold', 'khaki', 'lavender', 'plum', 'orchid', 'salmon',
-                                'tomato', 'crimson', 'sienna', 'tan', 'chartreuse', 'aquamarine', 'mintcream', 'snow', 'seashell',
-                                'oldlace', 'floralwhite', 'ghostwhite', 'whitesmoke', 'gainsboro', 'lightgray', 'darkgray', 'lightslategray',
-                                'slategray', 'darkslategray', 'mediumslateblue', 'midnightblue', 'blueviolet', 'mediumvioletred', 'lawngreen',
-                                'mediumseagreen', 'seagreen', 'forestgreen', 'darkgreen', 'darkolivegreen', 'olive', 'olivedrab', 'yellowgreen',
-                                'limegreen', 'forestgreen', 'darkseagreen', 'lightgreen', 'palegreen', 'springgreen', 'chartreuse', 'lightgoldenrodyellow',
-                                'lightyellow', 'goldenrod', 'darkgoldenrod', 'yellowgreen', 'greenyellow'
-                            ];
-                        @endphp
-
-                        @if(in_array($currentColor, $colors))
-                            <button class="color-btn {{ $currentColor }} active" data-color="{{ ucfirst($currentColor) }}"></button>
-                        @endif
                         <div class="cartProductColor">
                             {{$product -> product_color}}
                         </div>

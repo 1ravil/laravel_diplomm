@@ -480,11 +480,40 @@ class MainController extends Controller
     public function UsersDelete(Request $request)
     {
         $usersIDs = $request->input('users_ids');
-        if ($usersIDs) {
-            User::whereIn('id', $usersIDs)->delete();
+
+        if (empty($usersIDs)) {
+            return redirect()->route('adminPanelUsers')->with('error', 'Не выбраны пользователи для удаления.');
         }
-        return redirect()->route('adminPanelUsers')->with('success', 'Выбранные товары удалены.');
+
+        $users = User::whereIn('id', $usersIDs)->get();
+
+        DB::transaction(function () use ($users) {
+            foreach ($users as $user) {
+                // Находим клиента по email
+                $customer = customers::where('email', $user->email)->first();
+
+                if ($customer) {
+                    // Получаем все order_id, связанные с этим клиентом
+                    $orderIds = DB::table('orders_products_customers')
+                        ->where('customer_id', $customer->id)
+                        ->pluck('order_id');
+
+                    if ($orderIds->isNotEmpty()) {
+                        // Удаляем связанные записи
+                        DB::table('orders_products_customers')->whereIn('order_id', $orderIds)->delete();
+                        DB::table('orders_products')->whereIn('orders_id', $orderIds)->delete();
+                        DB::table('orders')->whereIn('id', $orderIds)->delete();
+                    }
+                }
+
+                // Удаляем пользователя
+                $user->delete();
+            }
+        });
+
+        return redirect()->route('adminPanelUsers')->with('success', 'Пользователи и их заказы успешно удалены.');
     }
+
 
 
     public function createUser()
